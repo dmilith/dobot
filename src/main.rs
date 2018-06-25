@@ -86,7 +86,7 @@ fn main() {
         server: Some("chat.freenode.net".to_owned()),
         channels: Some(vec![
            "#scala.pl".to_owned(),
-           // "#gynvaelstream".to_owned()
+           "#gynvaelstream".to_owned()
         ]),
         use_ssl: Some(true),
         burst_window_length: Some(4),
