@@ -1,6 +1,6 @@
 [package]
 name = "dobot"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Daniel (dmilith) Dettlaff <dmilith@me.com>"]
 
 [dependencies]

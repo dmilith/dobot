@@ -34,14 +34,22 @@ fn get_result(mode: Modes, core: &mut Core) -> String {
     match mode {
         Shell(command) => {
             // create command wrapper:
-            let wrapper_contents = format!("#!/bin/sh\ntimeout {} {}\n", CMD_TIMEOUT, command);
+            let wrapper = format!("#!/bin/sh\n{}\n", command);
+            let wrapper_tmpfile = NamedTempFile::new().unwrap();
+            let wrapper_path = &wrapper_tmpfile.path();
+            match write!(&wrapper_tmpfile, "{}", wrapper) {
+                Ok(_) => println!("Tmpfile: {:?}. Written data: {:?}", wrapper_tmpfile, wrapper),
+                Err(why) => return format!("Couldn't write to {}: {}", wrapper_path.display(), why.description()),
+            }
+
+            let wrapper_contents = format!("#!/bin/sh\ntimeout {} sh {}\n", CMD_TIMEOUT, wrapper_path.display());
             let tmpfile = NamedTempFile::new().unwrap();
             let path = &tmpfile.path();
-
             match write!(&tmpfile, "{}", wrapper_contents) {
-                Ok(_) => println!("Tmpfile: {:?}", tmpfile),
+                Ok(_) => println!("Tmpfile: {:?}. Written data: {:?}", tmpfile, wrapper_contents),
                 Err(why) => return format!("Couldn't write to {}: {}", path.display(), why.description()),
             }
+
             // spawn asynchronously
             let child = Cmd::new("sh").arg(path).output_async(&mut core.handle());
             match core.run(child) {
@@ -82,11 +90,11 @@ fn main() {
     let mut core = Core::new().unwrap();
 
     let config = Config {
-        nickname: Some("dobot".to_owned()),
+        nickname: Some("gsdhbfhugdf".to_owned()),
         server: Some("chat.freenode.net".to_owned()),
         channels: Some(vec![
-           "#scala.pl".to_owned(),
-           "#gynvaelstream".to_owned()
+           // "#scala.pl".to_owned(),
+           "#verknowsys".to_owned()
         ]),
         use_ssl: Some(true),
         burst_window_length: Some(4),
