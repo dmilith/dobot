@@ -90,11 +90,11 @@ fn main() {
     let mut core = Core::new().unwrap();
 
     let config = Config {
-        nickname: Some("gsdhbfhugdf".to_owned()),
+        nickname: Some("dobot".to_owned()),
         server: Some("chat.freenode.net".to_owned()),
         channels: Some(vec![
-           // "#scala.pl".to_owned(),
-           "#verknowsys".to_owned()
+           "#scala.pl".to_owned(),
+           "#gynvaelstream".to_owned()
         ]),
         use_ssl: Some(true),
         burst_window_length: Some(4),
