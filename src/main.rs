@@ -91,6 +91,7 @@ fn main() {
 
     let config = Config {
         nickname: Some("dobot".to_owned()),
+        nick_password: Some("alaniemakota666".to_owned()),
         server: Some("chat.freenode.net".to_owned()),
         channels: Some(vec![
            "#scala.pl".to_owned(),
