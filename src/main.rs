@@ -86,16 +86,14 @@ fn get_result(mode: Modes, core: &mut Core) -> String {
 
 
 fn main() {
-
-    let mut core = Core::new().unwrap();
-
     let config = Config {
         nickname: Some("dobot".to_owned()),
         nick_password: Some("alaniemakota666".to_owned()),
         server: Some("chat.freenode.net".to_owned()),
         channels: Some(vec![
+           "#gynvaelstream".to_owned(),
+           "#gynvaelstream-en".to_owned(),
            "#scala.pl".to_owned(),
-           "#gynvaelstream".to_owned()
         ]),
         use_ssl: Some(true),
         burst_window_length: Some(4),
@@ -103,48 +101,43 @@ fn main() {
         ..Default::default()
     };
 
-    // Create our own local event loop
-    // use futures::future::{ok, loop_fn, Future, FutureResult, Loop};
-    // let timer = Timer::default();
-    // let _timer = timer.interval(Duration::from_millis(10000)).for_each(move |_| {
-    //     println!("timeout");
-    //     Ok(())
-    // });
-    // loop_fn(vec!(), |client| {
-    // });
-    // use std::collections::HashMap;
-    // type HM = HashMap<char, usize>;
-    // let mut dict = HM::new();
-    // String::from("some string like this").chars().for_each(|ch| {
-    //     let item = dict.entry(ch).or_insert(0);
-    //     *item = *item + 1;
-    // });
-    // println!("{:?}", dict);
+    loop {
+        let mut core = Core::new().unwrap();
+        let client = IrcClient::from_config(config.clone()).unwrap();
+        client.identify().unwrap();
+        client.for_each_incoming(
+            |message| {
+                print!("> {}", message);
+                if let Command::PRIVMSG(ref target, ref msg) = message.command {
+                    println!("MSG: {}, LEN: {}", msg, msg.len());
+                    let eval_head = msg.chars().take(3).collect::<String>();
+                    let eval_cmd = msg.chars().skip(3).collect::<String>();
+                    match eval_head.as_ref() {
+                        "sh:" => client.send_privmsg(
+                                    message.response_target().unwrap_or(target),
+                                    &format!("{}: {}",
+                                         message.source_nickname().unwrap_or(target),
+                                         get_result(Shell(eval_cmd), &mut core)
+                                    )
+                                ).unwrap_or_else(|_| println!("I should be able to send Sh response to IRC channel!")),
 
-    let client = IrcClient::from_config(config).unwrap();
-    client.identify().unwrap();
-    client.for_each_incoming(|message| {
-        print!("> {}", message);
-        if let Command::PRIVMSG(ref target, ref msg) = message.command {
-            println!("MSG: {}, LEN: {}", msg, msg.len());
-            let eval_head = msg.chars().take(3).collect::<String>();
-            let eval_cmd = msg.chars().skip(3).collect::<String>();
-            match eval_head.as_ref() {
-                "sh:" => client.send_privmsg(
-                            message.response_target().unwrap_or(target),
-                            &format!("Shell: {} -> {:?}", eval_cmd.clone(), get_result(Shell(eval_cmd), &mut core))
-                        ).expect("I should be able to send Sh response to IRC channel"),
+                        "rs:" => client.send_privmsg(
+                                    message.response_target().unwrap_or(target),
+                                    &format!("{}: {}",
+                                         message.source_nickname().unwrap_or(target),
+                                         get_result(Rust(eval_cmd), &mut core)
+                                    )
+                                ).unwrap_or_else(|_| println!("I should be able to send Rust response to IRC channel!")),
 
-                "rs:" => client.send_privmsg(
-                            message.response_target().unwrap_or(target),
-                            &format!("Rust: {} -> {:?}", eval_cmd.clone(), get_result(Rust(eval_cmd), &mut core))
-                        ).expect("I should be able to send Rust response to IRC channel!"),
-
-                _ => ()
+                        _ => ()
+                    }
+                    if msg.contains("cebul") {
+                        client
+                            .send_privmsg(target, "😋")
+                            .unwrap_or_else(|_| println!("I should be able to send Cebula yum to IRC channel!"));
+                    }
+                }
             }
-            if msg.contains("cebul") {
-                client.send_privmsg(target, "😋").unwrap();
-            }
-        }
-    }).unwrap();
+        ).map_err(|e| println!("{:?}", e)).unwrap_or_default();
+    }
 }
